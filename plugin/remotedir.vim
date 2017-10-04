@@ -42,10 +42,10 @@ function! Refunc()
   for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:"')
     let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
     if l =~ '\/\s*$'
-      exe 'Dirvish' l
+      exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
-      call writefile(systemlist("curl -g -s ".l),thf)
+      call writefile(systemlist("curl -g -s ".shellescape(l)),thf)
       exe 'e' thf
     endif
   endfor
