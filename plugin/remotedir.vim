@@ -6,7 +6,7 @@ function! s:curl_encode(str)
         \ , '\="%".printf("%02X",char2nr(submatch(0)))', 'g')
 endfunction
 function! s:Lsr(dir)
-  let paths = systemlist('curl -g -s '.fnameescape(s:curl_encode(a:dir)).' -X MLSD')
+  let paths = systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
   " filter response & sort dotfiles lower
   let [visi, dots] = [[], []]
   for line in paths
@@ -45,7 +45,7 @@ function! Refunc()
       exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
-      call writefile(systemlist("curl -g -s ".shellescape(l)),thf)
+      call writefile(systemlist("curl -g -s ".shellescape(s:curl_encode(l))),thf)
       exe 'e' thf
     endif
   endfor
