@@ -1,15 +1,15 @@
 augroup dirvishRemote
   au!
 augroup END
+
 function! s:curl_encode(str)
   return substitute(a:str, "[][?#!$&'()*+,;=]"
         \ , '\="%".printf("%02X",char2nr(submatch(0)))', 'g')
 endfunction
+
 function! s:Lsr(dir)
-  let paths = systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
-  " filter response & sort dotfiles lower
   let [visi, dots] = [[], []]
-  for line in paths
+  for line in systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
     let [info; path] = split(line, ' ', 1)
     let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
     if type is ''
@@ -17,10 +17,10 @@ function! s:Lsr(dir)
     endif
     call add(path[0] == '.' ? dots : visi, a:dir . path . (type ==? 'dir' ? '/' : ''))
   endfor
-  let paths = sort(visi) + sort(dots)
   " return listed directory
-  return paths
+  return sort(visi) + sort(dots)
 endfunction
+
 function! s:PrepD(...)
   if a:0 && a:1 =~ '^\a\+:\/\/[^/]'
     let dir = tempname()
@@ -33,11 +33,13 @@ function! s:PrepD(...)
     call call('dirvish#open',a:000)
   endif
 endfunction
-if v:vim_did_enter
+
+if get(v:,'vim_did_enter')
   command! -bar -nargs=? -complete=dir Dirvish call <SID>PrepD(<q-args>)
 else
   au dirvishRemote Vimenter * command! -bar -nargs=? -complete=dir Dirvish call <SID>PrepD(<q-args>)
 endif
+
 function! Refunc()
   for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:"')
     let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
