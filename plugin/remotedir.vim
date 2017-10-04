@@ -8,7 +8,6 @@ endfunction
 function! s:Lsr(dir)
   let paths = systemlist('curl -g -s '.fnameescape(s:curl_encode(a:dir)).' -X MLSD')
   " filter response & sort dotfiles lower
-  echom 'curl -g -s '.fnameescape(s:curl_encode(a:dir)).' -X MLSD'
   let [visi, dots] = [[], []]
   for line in paths
     let [info; path] = split(line, ' ', 1)
@@ -29,7 +28,7 @@ function! s:PrepD(...)
     call call('dirvish#open',[dir] + (a:0 > 1 ? a:000[1:] : []))
     delfunc dirvish#open
     call setline(1,s:Lsr(a:1))
-    au dirvishRemote funcundefined dirvish#open redir => g:out | call feedkeys(":\<C-U>redir END | call g:Refunc()\<CR>",'n')
+    au dirvishRemote funcundefined dirvish#open redir => g:remote_out | call feedkeys(":\<C-U>redir END | call g:Refunc()\<CR>",'n')
   else
     call call('dirvish#open',a:000)
   endif
@@ -40,8 +39,8 @@ else
   au dirvishRemote Vimenter * command! -bar -nargs=? -complete=dir Dirvish call <SID>PrepD(<q-args>)
 endif
 function! Refunc()
-  for l in split(g:out,"\n")
-    let l = substitute(l,'.*\s\ze\w\+:\/\/[^/]','','')
+  for l in filter(split(g:remote_out,"\n"),'v:val =~ "^dirvish:"')
+    let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
     if l =~ '\/\s*$'
       exe 'Dirvish' l
     else
