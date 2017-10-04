@@ -28,7 +28,7 @@ function! s:PrepD(...)
     call call('dirvish#open',[dir] + (a:0 > 1 ? a:000[1:] : []))
     delfunc dirvish#open
     call setline(1,s:Lsr(a:1))
-    au dirvishRemote funcundefined dirvish#open redir => g:remote_out | call feedkeys(":\<C-U>redir END | call g:Refunc()\<CR>",'n')
+    au dirvishRemote funcundefined dirvish#open redir => g:remote_out | call feedkeys(":\<C-U>redir END | call g:Refunc() | echo\<CR>",'n')
   else
     call call('dirvish#open',a:000)
   endif
@@ -39,7 +39,7 @@ else
   au dirvishRemote Vimenter * command! -bar -nargs=? -complete=dir Dirvish call <SID>PrepD(<q-args>)
 endif
 function! Refunc()
-  for l in filter(split(g:remote_out,"\n"),'v:val =~ "^dirvish:"')
+  for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:"')
     let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
     if l =~ '\/\s*$'
       exe 'Dirvish' l
