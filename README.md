@@ -1,2 +1,2 @@
 # remote-viewer
-vim-dirvish &amp; cURL
+vim-dirvish &amp; cURL (both required)
