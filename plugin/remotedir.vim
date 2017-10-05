@@ -29,7 +29,7 @@ function! s:PrepD(...)
     delfunc dirvish#open
     call setline(1,s:Lsr(a:1))
     exe 'au dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
-          \ '| redir => g:remote_out | call feedkeys(":\<C-U>redi END|cal g:Refunc()|ec\<CR>","n") | endif'
+          \ '| redir => g:remote_out | call feedkeys(":\<C-U>ec|redi END|cal g:Refunc()\<CR>","n") | endif'
   else
     call call('dirvish#open',a:000)
   endif
