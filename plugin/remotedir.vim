@@ -15,7 +15,7 @@ function! s:Lsr(dir)
     if type is ''
       continue
     endif
-    call add(path[0] == '.' ? dots : visi, a:dir . path . (type ==? 'dir' ? '/' : ''))
+    call add(path[0] == '.' ? dots : visi, substitute(a:dir,'[^/]$','&/','') . path . (type ==? 'dir' ? '/' : ''))
   endfor
   " return listed directory
   return sort(visi) + sort(dots)
