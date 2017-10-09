@@ -9,16 +9,39 @@ endfunction
 
 function! s:Lsr(dir)
   let [visi, dots] = [[], []]
-  for line in systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
-    let [info; path] = split(line, ' ', 1)
-    let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
-    if type is ''
-      continue
+  for line in s:Sshls(a:dir)
+    let path = line
+    if a:dir !~# '^s\%(sh\|cp\)\>'
+      let [info; path] = split(line, ' ', 1)
+      let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
+      let path .= type ==? 'dir' ? '/' : ''
+      if type is ''
+        continue
+      endif
     endif
-    call add(path[0] == '.' ? dots : visi, substitute(a:dir,'[^/]$','&/','') . path . (type ==? 'dir' ? '/' : ''))
+    call add(path[0] == '.' ? dots : visi, substitute(a:dir,'[^/]$','&/','') . path)
   endfor
   " return listed directory
   return sort(visi) + sort(dots)
+endfunction
+
+let s:this = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
+let s:passcache = {}
+function! s:Sshls(dir)
+  if a:dir =~# '^s\%(sh\|cp\)\A'
+    let [it,path] = matchlist(a:dir,'^....\/\/\([^/]\+\)\(.*\)')[1:2]
+    let path = path is '' ? '/' : path
+    let it = split(it,'@')
+    let pass = get(s:passcache,join(it,''),'')
+    if pass is ''
+      call inputsave()
+      let pass = inputsecret('')
+      call inputrestore()
+      let s:passcache[join(it,'')] = pass
+    endif
+    return systemlist(join([s:this,it[1],it[0],pass, path]))
+  endif
+  return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
 
 function! s:PrepD(...)
