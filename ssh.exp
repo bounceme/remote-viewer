@@ -1,5 +1,4 @@
 #!/usr/bin/expect --
-stty -echo
 set host [lindex $argv 0]
 set user [lindex $argv 1]
 set pass [lindex $argv 2]
@@ -10,5 +9,4 @@ spawn ssh $host -l $user "
 "
 expect -re "^Password:"
 send "$pass\r"
-stty echo
 interact
