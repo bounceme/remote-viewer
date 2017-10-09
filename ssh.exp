@@ -2,7 +2,11 @@
 set host [lindex $argv 0]
 set user [lindex $argv 1]
 set pass [lindex $argv 2]
-spawn ssh $host -l $user ls
+set path [lindex $argv 3]
+spawn ssh $host -l $user "
+{ find $path -type d -maxdepth 1 | sed -e 's/$/&\\//' &&
+  find $path \\! \\( -type d \\) -maxdepth 1 ; } | sed -e 's/^\\.\\///' -e '/^$/d'
+"
 expect -re "^Password:"
 send "$pass\r"
 interact
