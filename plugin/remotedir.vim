@@ -11,7 +11,7 @@ function! s:Lsr(dir)
   let [visi, dots] = [[], []]
   for line in s:Sshls(a:dir)
     let path = line
-    if a:dir !~# '^s\%(sh\|cp\)\>'
+    if a:dir !~# '^s\%(sh\|cp\)\A'
       let [info; path] = split(line, ' ', 1)
       let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
       let path .= type ==? 'dir' ? '/' : ''
