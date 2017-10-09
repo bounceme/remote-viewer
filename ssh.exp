@@ -4,7 +4,7 @@ set user [lindex $argv 1]
 set pass [lindex $argv 2]
 set path [lindex $argv 3]
 spawn ssh $host -l $user "
-{ cd $path && find . -type d -maxdepth 1 | sed -e 's/$/&\\//' &&
+{ cd $path && find . -type d -maxdepth 1 | sed -e 's/$/\\//' &&
   find . \\! \\( -type d \\) -maxdepth 1 ; } | sed -e 's/^\\.\\///' -e '/^$/d'
 "
 expect -re "^Password:"
