@@ -9,14 +9,14 @@ endfunction
 
 function! s:Lsr(dir)
   let [visi, dots] = [[], []]
-  for line in s:Sshls(a:dir)
-    let path = line
+  for path in filter(s:Sshls(a:dir),'v:val =~ "\\S"')
     if a:dir !~# '^s\%(sh\|cp\)\A'
-      let [info; path] = split(line, ' ', 1)
+      let [info; path] = split(path, ' ', 1)
       let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
-      let path .= type ==? 'dir' ? '/' : ''
       if type is ''
         continue
+      elseif type ==? 'dir'
+        let path .= '/'
       endif
     endif
     call add(path[0] == '.' ? dots : visi, substitute(a:dir,'[^/]$','&/','') . path)
