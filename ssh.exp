@@ -1,13 +1,12 @@
-#!/usr/bin/expect --
 log_user 0
 set host [lindex $argv 0]
 set user [lindex $argv 1]
-set pass [lindex $argv 2]
 set path [lindex $argv 3]
-spawn ssh $host -l $user "
-{ cd $path && find . -type d -maxdepth 1 | sed -e 's/$/\\//' &&
-  find . \\! \\( -type d \\) -maxdepth 1 ; } | sed -e 's/^\\.\\///' -e '/^$/d'
-"
-expect -re "^Password:"
-send "$pass\r"
-interact
+
+spawn ssh $host -l $user
+expect -timeout 1 -re passphrase|^Password exit
+close
+system ssh $host -l $user "'{ cd $path && find . -type d -maxdepth 1 |
+sed -e '\"'\"'s/$/\\//'\"'\"' &&
+find . \\! \\( -type d \\) -maxdepth 1 ; } |
+sed -e '\"'\"'s/^\\.\\///'\"'\"' -e '\"'\"'/^$/d'\"'\"' ; exit'"
