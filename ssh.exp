@@ -1,7 +1,7 @@
 log_user 0
 set host [lindex $argv 0]
 set user [lindex $argv 1]
-set path [lindex $argv 3]
+set path [lindex $argv 2]
 
 spawn ssh $host -l $user
 expect -timeout 1 -re passphrase|^Password exit

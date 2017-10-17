@@ -28,9 +28,10 @@ endfunction
 let s:this = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
 function! s:Sshls(dir)
   if a:dir =~# '^s\%(sh\|cp\)\A'
-    let [it,path] = matchlist(a:dir,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
+    let [it,path] = matchlist(a:dir,'^.\{6}\([^/]\+\)\/\=\(.*\)')[1:2]
     let path = path is '' ? '/' : path
-    return systemlist(join(['expect -f',s:this]+reverse(split(it,'@'))+[path]))
+    let parts = exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))
+    return systemlist(join(['expect -f',s:this]+parts+[path]))
   endif
   return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
@@ -59,6 +60,7 @@ function! Refunc()
   for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:"')
     let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
     if l =~ '\/\s*$'
+      let b:changed_remote = 1
       exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
