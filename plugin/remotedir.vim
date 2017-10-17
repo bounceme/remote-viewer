@@ -26,19 +26,11 @@ function! s:Lsr(dir)
 endfunction
 
 let s:this = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
-let s:passcache = {}
 function! s:Sshls(dir)
   if a:dir =~# '^s\%(sh\|cp\)\A'
     let [it,path] = matchlist(a:dir,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
     let path = path is '' ? '/' : path
-    let pass = get(s:passcache,it,'')
-    if pass is ''
-      call inputsave()
-      let pass = inputsecret('')
-      call inputrestore()
-      let s:passcache[it] = pass
-    endif
-    return systemlist(join([s:this]+reverse(split(it,'@'))+[pass,path]))
+    return systemlist(join(['expect -f',s:this]+reverse(split(it,'@'))+[path]))
   endif
   return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
