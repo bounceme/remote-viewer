@@ -29,7 +29,7 @@ let s:this = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
 function! s:Sshls(dir)
   if a:dir =~# '^s\%(sh\|cp\)\A'
     let [it,path] = matchlist(a:dir,'^.\{6}\([^/]\+\)\/\=\(.*\)')[1:2]
-    let path = path is '' ? '/' : path
+    let path = path =~ '^\/\=$' ? '$HOME' : path
     let parts = exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))
     return systemlist(join(['expect -f',s:this]+parts+[path]))
   endif
