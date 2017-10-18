@@ -7,6 +7,6 @@ vim-dirvish &amp; cURL (both required)
 
 **ssh Example**
 
-*requires ssh and expect within your $PATH*<br>
-follow `:h netrw-ssh-hack`. then `Dirvish ssh://user@hostname/path`
+requires *ssh* and *expect(1)* within your $PATH<br>
+follow `:h netrw-ssh-hack`. then, `Dirvish ssh://user@hostname/path`
 
