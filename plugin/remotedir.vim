@@ -2,6 +2,9 @@ augroup dirvishRemote
   au!
 augroup END
 
+let s:pdir = fnamemodify(expand('<sfile>'),':p:h:h')
+let s:expect = s:pdir.'/ssh.exp'
+
 function! s:curl_encode(str)
   return substitute(a:str, "[][?#!$&'()*+,;=]"
         \ , '\="%".printf("%02X",char2nr(submatch(0)))', 'g')
@@ -9,8 +12,8 @@ endfunction
 
 function! s:Lsr(dir)
   let [visi, dots] = [[], []]
-  for path in filter(s:Sshls(a:dir),'v:val =~ "\\S"')
-    if a:dir !~# '^s\%(sh\|cp\)\A'
+  for path in filter(s:ls(a:dir),'v:val =~ "\\S"')
+    if a:dir !~# '^s\%(sh\|cp\):'
       let [info; path] = split(path, ' ', 1)
       let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
       if type is ''
@@ -25,15 +28,27 @@ function! s:Lsr(dir)
   return sort(visi) + sort(dots)
 endfunction
 
-let s:this = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
-function! s:Sshls(dir)
-  if a:dir =~# '^s\%(sh\|cp\)\A'
-    let [it,path] = matchlist(a:dir,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
-    let path = shellescape('$HOME'.path)
-    let parts = exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))
-    return systemlist(join(['expect -f',s:this]+parts+[path]))
+function! s:Catr(fname,...)
+  if a:1
+    return s:ssh_ls_cat(a:fname)
+  else
+    return systemlist("curl -g -s ".shellescape(s:curl_encode(a:fname)))
   endif
-  return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
+endfunction
+
+function! s:ssh_ls_cat(rl)
+  let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
+  return systemlist(join(['expect -f', s:expect] +
+        \ (exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))) +
+        \ [shellescape('$HOME'.path)]))
+endfunction
+
+function! s:ls(dir)
+  if a:dir =~# '^s\%(sh\|cp\):'
+    return s:ssh_ls_cat(a:dir)
+  else
+    return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
+  endif
 endfunction
 
 function! s:PrepD(...)
@@ -64,7 +79,7 @@ function! Refunc()
       exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
-      call writefile(systemlist("curl -g -s ".shellescape(s:curl_encode(l))),thf)
+      call writefile(s:Catr(l,l =~# '^s\%(sh\|cp\):'),thf)
       exe 'e' thf
     endif
   endfor
