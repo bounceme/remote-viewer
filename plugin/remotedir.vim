@@ -12,7 +12,7 @@ endfunction
 
 function! s:Lsr(dir)
   let [visi, dots] = [[], []]
-  for path in filter(s:ls(a:dir),'v:val =~ "\\S"')
+  for path in filter(s:ls(a:dir,a:dir =~# '^s\%(sh\|cp\):'),'v:val =~ "\\S"')
     if a:dir !~# '^s\%(sh\|cp\):'
       let [info; path] = split(path, ' ', 1)
       let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
@@ -38,13 +38,13 @@ endfunction
 
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
-  return systemlist(join(['expect -f', s:expect] +
+  return systemlist(join(['LC_ALL=C expect -f', s:expect] +
         \ (exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))) +
         \ [shellescape('$HOME'.path)]))
 endfunction
 
-function! s:ls(dir)
-  if a:dir =~# '^s\%(sh\|cp\):'
+function! s:ls(dir,...)
+  if a:1
     return s:ssh_ls_cat(a:dir)
   else
     return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
