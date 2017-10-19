@@ -11,9 +11,9 @@ function! s:curl_encode(str)
 endfunction
 
 function! s:Lsr(dir)
-  let [visi, dots] = [[], []]
-  for path in filter(s:ls(a:dir,a:dir =~# '^s\%(sh\|cp\):'),'v:val =~ "\\S"')
-    if a:dir !~# '^s\%(sh\|cp\):'
+  let [visi, dots, ssh] = [[], [], a:dir =~# '^s\%(sh\|cp\):']
+  for path in filter(s:ls(a:dir,ssh),'v:val =~ "\\S"')
+    if !ssh
       let [info; path] = split(path, ' ', 1)
       let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
       if type is ''
