@@ -29,26 +29,22 @@ function! s:Lsr(dir)
 endfunction
 
 function! s:Catr(fname,...)
-  if a:1
-    return s:ssh_ls_cat(a:fname)
-  else
-    return systemlist("curl -g -s ".shellescape(s:curl_encode(a:fname)))
-  endif
+  return a:1 ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
+endfunction
+
+function! s:sys(cmd)
+  return systemlist(join(['LC_ALL=C',a:cmd]))
 endfunction
 
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
-  return systemlist(join(['LC_ALL=C expect -f', s:expect] +
+  return s:sys(join(['expect -f', s:expect] +
         \ (exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))) +
         \ [shellescape('$HOME'.path)]))
 endfunction
 
 function! s:ls(dir,...)
-  if a:1
-    return s:ssh_ls_cat(a:dir)
-  else
-    return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
-  endif
+  return a:1 ? s:ssh_ls_cat(a:dir) : s:sys('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
 
 function! s:PrepD(...)
