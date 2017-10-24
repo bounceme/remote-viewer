@@ -11,7 +11,7 @@ function! s:curl_encode(str)
 endfunction
 
 function! s:Lsr(dir)
-  let [visi, dots, ssh] = [[], [], a:dir =~# '^s\%(sh\|cp\):']
+  let [visi, dots, ssh] = [[], [], a:dir =~# '^ssh:']
   for path in filter(s:ls(a:dir,ssh),'v:val =~ "\\S"')
     if !ssh
       let [info; path] = split(path, ' ', 1)
@@ -28,8 +28,8 @@ function! s:Lsr(dir)
   return sort(visi) + sort(dots)
 endfunction
 
-function! s:Catr(fname,...)
-  return a:1 ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
+function! s:Catr(fname,ssh)
+  return a:ssh ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
 endfunction
 
 function! s:sys(cmd)
@@ -43,8 +43,8 @@ function! s:ssh_ls_cat(rl)
         \ [shellescape('$HOME'.path)]))
 endfunction
 
-function! s:ls(dir,...)
-  return a:1 ? s:ssh_ls_cat(a:dir) : s:sys('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
+function! s:ls(dir,ssh)
+  return a:ssh ? s:ssh_ls_cat(a:dir) : s:sys('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
 
 function! s:PrepD(...)
@@ -75,7 +75,7 @@ function! Refunc()
       exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
-      call writefile(s:Catr(l,l =~# '^s\%(sh\|cp\):'),thf)
+      call writefile(s:Catr(l,l =~# '^ssh:'),thf)
       exe 'e' thf
     endif
   endfor
