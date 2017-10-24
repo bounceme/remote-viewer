@@ -32,7 +32,7 @@ function! s:Catr(fname,ssh)
 endfunction
 
 function! s:sys(cmd)
-  return systemlist(join(['LC_ALL=C',a:cmd]))
+  return systemlist('LC_ALL=C '.a:cmd)
 endfunction
 
 function! s:ssh_ls_cat(rl)
