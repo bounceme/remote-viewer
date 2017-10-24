@@ -2,7 +2,7 @@ augroup dirvishRemote
   au!
 augroup END
 
-let s:expect = fnamemodify(expand('<sfile>'),':p:h:h').'/ssh.exp'
+let s:expect = fnamemodify(fnamemodify(expand('<sfile>'),':p:h:h'),':p').'ssh.exp'
 
 function! s:curl_encode(str)
   return substitute(a:str, "[][?#!$&'()*+,;=]"
