@@ -2,8 +2,7 @@ augroup dirvishRemote
   au!
 augroup END
 
-let s:pdir = fnamemodify(expand('<sfile>'),':p:h:h')
-let s:expect = s:pdir.'/ssh.exp'
+let s:expect = fnamemodify(fnamemodify(expand('<sfile>'),':p:h:h'),':p').'ssh.exp'
 
 function! s:curl_encode(str)
   return substitute(a:str, "[][?#!$&'()*+,;=]"
@@ -11,7 +10,7 @@ function! s:curl_encode(str)
 endfunction
 
 function! s:Lsr(dir)
-  let [visi, dots, ssh] = [[], [], a:dir =~# '^s\%(sh\|cp\):']
+  let [visi, dots, ssh] = [[], [], a:dir =~# '^ssh:']
   for path in filter(s:ls(a:dir,ssh),'v:val =~ "\\S"')
     if !ssh
       let [info; path] = split(path, ' ', 1)
@@ -28,27 +27,23 @@ function! s:Lsr(dir)
   return sort(visi) + sort(dots)
 endfunction
 
-function! s:Catr(fname,...)
-  if a:1
-    return s:ssh_ls_cat(a:fname)
-  else
-    return systemlist("curl -g -s ".shellescape(s:curl_encode(a:fname)))
-  endif
+function! s:Catr(fname,ssh)
+  return a:ssh ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
+endfunction
+
+function! s:sys(cmd)
+  return systemlist('LC_ALL=C '.a:cmd)
 endfunction
 
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
-  return systemlist(join(['LC_ALL=C expect -f', s:expect] +
+  return s:sys(join(['expect -f', s:expect] +
         \ (exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))) +
         \ [shellescape('$HOME'.path)]))
 endfunction
 
-function! s:ls(dir,...)
-  if a:1
-    return s:ssh_ls_cat(a:dir)
-  else
-    return systemlist('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
-  endif
+function! s:ls(dir,ssh)
+  return a:ssh ? s:ssh_ls_cat(a:dir) : s:sys('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
 
 function! s:PrepD(...)
@@ -79,7 +74,7 @@ function! Refunc()
       exe 'Dirvish' fnameescape(l)
     else
       let thf = tempname()
-      call writefile(s:Catr(l,l =~# '^s\%(sh\|cp\):'),thf)
+      call writefile(s:Catr(l,l =~# '^ssh:'),thf)
       exe 'e' thf
     endif
   endfor
