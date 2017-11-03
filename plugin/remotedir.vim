@@ -2,6 +2,9 @@ augroup dirvishRemote
   au!
 augroup END
 
+if exists('s:expect')
+  finish
+endif
 let s:expect = fnamemodify(fnamemodify(expand('<sfile>'),':p:h:h'),':p').'ssh.exp'
 
 function! s:curl_encode(str)
@@ -14,7 +17,7 @@ function! s:Lsr(dir)
   for path in filter(s:ls(a:dir,ssh),'v:val =~ "\\S"')
     if !ssh
       let [info; path] = split(path, ' ', 1)
-      let [path, type] = [join(path), matchstr(info, '\c\<type=\zs\%(dir\|file\)\ze;')]
+      let [path, type] = [join(path), matchstr(info, '\c\Wtype=\zs\%(dir\|file\)\ze;')]
       if type is ''
         continue
       elseif type ==? 'dir'
@@ -46,13 +49,21 @@ function! s:ls(dir,ssh)
   return a:ssh ? s:ssh_ls_cat(a:dir) : s:sys('curl -g -s '.shellescape(s:curl_encode(a:dir)).' -X MLSD')
 endfunction
 
+let s:cache_url = {}
+
 function! s:PrepD(...)
-  if a:0 && a:1 =~ '^\a\+:\/\/[^/]'
-    let dir = tempname()
-    call mkdir(dir,'p')
+  let in_cache = has_key(s:cache_url,a:1)
+  if a:0 && (a:1 =~ '^\a\+:\/\/[^/]' || in_cache)
+    if in_cache
+      let dir = a:1
+    else
+      let dir = fnamemodify(tempname(),':p:s?/[^/]\+$?\0\0?')
+      let s:cache_url[dir] = a:1
+      call mkdir(dir,'p')
+    endif
     call call('dirvish#open',[dir] + (a:0 > 1 ? a:000[1:] : []))
     delfunc dirvish#open
-    call setline(1,s:Lsr(a:1))
+    call setline(1,s:Lsr(in_cache ? s:cache_url[a:1] : a:1))
     exe 'au dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
           \ '| redir => g:remote_out | call feedkeys(":\<C-U>ec|redi END|cal g:Refunc()\<CR>","n") | endif'
   else
@@ -73,7 +84,7 @@ function! Refunc()
       let b:changed_remote = 1
       exe 'Dirvish' fnameescape(l)
     else
-      let thf = tempname()
+      let thf = fnamemodify(expand('%'),':p').(split(tempname(),'/')[-1])
       call writefile(s:Catr(l,l =~# '^ssh:'),thf)
       exe 'e' thf
     endif
