@@ -52,7 +52,7 @@ endfunction
 let s:cache_url = {}
 
 function! s:PrepD(...)
-  let path = substitute(a:1,'[^/]$','&/','')
+  let path = a:0 ? substitute(a:1,'[^/]$','&/','') : ''
   let in_cache = has_key(s:cache_url,path)
   if a:0 && (path =~ '^\a\+:\/\/[^/]' || in_cache)
     if in_cache
