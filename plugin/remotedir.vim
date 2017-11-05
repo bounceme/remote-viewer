@@ -58,7 +58,13 @@ function! s:PrepD(...)
     if in_cache
       let dir = path
     else
-      let dir = fnamemodify(tempname(),':p').'/'
+      let bn = get(filter(items(s:cache_url),'v:val[1] ==# '
+            \ .string(substitute(path,'[^/]\+/$','',''))),0,[0])[0]
+      if bn isnot 0
+        let dir = bn . matchstr(bn,'[^/]\+/$')
+      else
+        let dir = fnamemodify(tempname(),':p').'/'
+      endif
       let s:cache_url[dir] = path
       call mkdir(dir,'p')
     endif
