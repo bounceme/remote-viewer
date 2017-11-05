@@ -41,8 +41,7 @@ endfunction
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
   return s:sys(join(['expect -f', s:expect] +
-        \ (exists('b:changed_remote') ? split(it,'@') : reverse(split(it,'@'))) +
-        \ [shellescape('$HOME'.path)]))
+        \ reverse(split(it,'@')) + [shellescape('$HOME'.path)]))
 endfunction
 
 function! s:ls(dir,ssh)
@@ -66,12 +65,12 @@ function! s:PrepD(...)
         let dir = fnamemodify(tempname(),':p').'/'
       endif
       let s:cache_url[dir] = path
-      call mkdir(dir,'p')
+      silent! call mkdir(dir,'p')
     endif
     call call('dirvish#open',[dir] + (a:0 > 1 ? a:000[1:] : []))
     delfunc dirvish#open
     call setline(1,s:Lsr(in_cache ? s:cache_url[path] : path))
-    exe 'au dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
+    exe 'au! dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
           \ '| redir => g:remote_out | call feedkeys(":\<C-U>ec|redi END|cal g:Refunc()\<CR>","n") | endif'
   else
     call call('dirvish#open',a:000)
@@ -88,7 +87,6 @@ function! Refunc()
   for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:"')
     let l = substitute(l,'.*\s\ze\a\+:\/\/[^/]','','')
     if l =~ '\/\s*$'
-      let b:changed_remote = 1
       exe 'Dirvish' fnameescape(l)
     else
       let thf = fnamemodify(expand('%'),':p').matchstr(tempname(),'[^/]\+$')
