@@ -2,10 +2,9 @@ augroup dirvishRemote
   au!
 augroup END
 
-if exists('s:expect')
+if exists('*s:curl_encode')
   finish
 endif
-let s:expect = fnamemodify(fnamemodify(expand('<sfile>'),':p:h:h'),':p').'ssh.exp'
 
 function! s:curl_encode(str)
   return substitute(a:str, "[][?#!$&'()*+,;=]"
@@ -30,6 +29,11 @@ function! s:Lsr(dir)
   return sort(visi) + sort(dots)
 endfunction
 
+let s:shls = "{ cd %s && find . -type d -maxdepth 1 | sed -e 's/$/\\//' ".
+      \ "&& find . \\! \\( -type d \\) -maxdepth 1 ; } ".
+      \ "| sed -e 's/^\\.\\///' -e '/^$/d' ; exit"
+let s:shcat = "cat %s ; exit"
+
 function! s:Catr(fname,ssh)
   return a:ssh ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
 endfunction
@@ -40,8 +44,11 @@ endfunction
 
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
-  return s:sys(join(['expect -f', s:expect] +
-        \ reverse(split(it,'@')) + [shellescape('$HOME'.path)]))
+  let [user,host] = split(it,'@')
+  let output = s:sys(printf('ssh %s -l %s ',host,user).
+        \ shellescape(printf(path[-1:] == '/' ? s:shls : s:shcat, '$HOME'.path)))
+  redraw!
+  return output
 endfunction
 
 function! s:ls(dir,ssh)
