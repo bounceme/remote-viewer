@@ -60,7 +60,7 @@ let s:cache_url = {}
 function! s:PrepD(...)
   let path = a:0 ? substitute(a:1,'[^/]$','&/','') : ''
   let in_cache = has_key(s:cache_url,path)
-  if a:0 && (path =~ '^\a\+://[^/]' || in_cache)
+  if a:0 && (path =~# '^\%(ftp\|ssh\)://[^/]' || in_cache)
     if in_cache
       let dir = path
     else
@@ -91,8 +91,8 @@ else
 endif
 
 function! Refunc()
-  for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:.*\\l://[^/]"')
-    let l = substitute(l,'.*\s\ze\a\+://[^/]','','')
+  for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:.*\\s\\%(ftp\\|ssh\\)://[^/]"')
+    let l = substitute(l,'\C.*\s\ze\%(ftp\|ssh\)://[^/]','','')
     if l =~ '/\s*$'
       exe 'Dirvish' fnameescape(l)
     else
