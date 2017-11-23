@@ -31,7 +31,7 @@ endfunction
 
 let s:shls = "{ cd %s && find . -type d -maxdepth 1 | sed -e 's/$/\\//' ".
       \ "&& find . \\! \\( -type d \\) -maxdepth 1 ; } ".
-      \ "| sed -e 's/^\\.\\///' -e '/^$/d' ; exit"
+      \ "| sed -e 's/^\\.\\///' ; exit"
 let s:shcat = "cat %s ; exit"
 
 function! s:Catr(fname,ssh)
