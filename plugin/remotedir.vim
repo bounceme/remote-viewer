@@ -98,7 +98,7 @@ function! Refunc()
     else
       let thf = fnamemodify(expand('%'),':p').matchstr(tempname(),'[^/]\+$')
       exe 'badd' thf '|b' thf
-      set buftype=nowrite
+      set buftype=nowrite bufhidden=wipe
       call setline(1,s:Catr(l,l =~# '^ssh:'))
     endif
   endfor
