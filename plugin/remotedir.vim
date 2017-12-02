@@ -78,7 +78,7 @@ function! s:PrepD(...)
     delfunc dirvish#open
     call setline(1,s:Lsr(in_cache ? s:cache_url[path] : path))
     exe 'au! dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
-          \ '| redir => g:remote_out | call feedkeys(":\<C-U>ec|redi END|cal g:Refunc()\<CR>","n") | endif'
+          \ '| redir => g:remote_out | call feedkeys(":\<C-U>echon ''''|redi END|cal g:Refunc()\<CR>","n") | endif'
   else
     call call('dirvish#open',a:000)
   endif
@@ -93,7 +93,7 @@ endif
 function! Refunc()
   for l in filter(split(g:remote_out,"\n"),'v:val =~# "^dirvish:.*\\s\\%(ftp\\|ssh\\)://[^/]"')
     let l = substitute(l,'\C.*\s\ze\%(ftp\|ssh\)://[^/]','','')
-    if l =~ '/\s*$'
+    if l[-1:] == '/'
       exe 'Dirvish' fnameescape(l)
     else
       let thf = fnamemodify(expand('%'),':p').matchstr(tempname(),'[^/]\+$')
