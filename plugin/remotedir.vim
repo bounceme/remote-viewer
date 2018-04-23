@@ -38,12 +38,12 @@ function! s:Catr(fname,ssh)
   return a:ssh ? s:ssh_ls_cat(a:fname) : s:sys("curl -g -s ".shellescape(s:curl_encode(a:fname)))
 endfunction
 
-function! s:sys(cmd)
-  return systemlist('LC_ALL=C '.a:cmd)
+function! s:sys(cmd,...)
+  return call('systemlist',['LC_ALL=C '.a:cmd] + a:000)
 endfunction
 
 function! s:ssh_ls_cat(rl)
-  let [it,path] = matchlist(a:rl,'^.\{6}\([^/]\+\)\(.*\)')[1:2]
+  let [it,path] = matchlist(a:rl[6:],'^[^/]\+\ze\(.*\)')[:1]
   let [user,host] = split(it,'@')
   let output = s:sys(printf('ssh %s -l %s ',host,user).
         \ shellescape(printf(path[-1:] == '/' ? s:shls : s:shcat, '$HOME'.path)))
