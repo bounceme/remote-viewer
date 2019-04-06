@@ -44,8 +44,17 @@ endfunction
 
 function! s:ssh_ls_cat(rl)
   let [it,path] = matchlist(a:rl[6:],'^[^/]\+\ze\(.*\)')[:1]
-  let [user,host] = split(it,'@')
-  let output = s:sys(printf('ssh %s -l %s ',host,user).
+  let parts = split(it,'@')
+  if len(parts) == 2
+    let [user,host] = parts
+    let ssh_cmd = printf('ssh %s -l %s ',host,user)
+  elseif len(parts) == 1
+    let host = parts[0]
+    let ssh_cmd = printf('ssh %s ',host)
+  else
+    throw printf('remotedir: could not parse user/host from %s', it)
+  endif
+  let output = s:sys(ssh_cmd.
         \ shellescape(printf(path[-1:] == '/' ? s:shls : s:shcat, '$HOME'.path)))
   redraw!
   return output
