@@ -84,7 +84,6 @@ function! s:PrepD(...)
       silent! call mkdir(dir,'p')
     endif
     call call('dirvish#open',[dir] + (a:0 > 1 ? a:000[1:] : []))
-    delfunc dirvish#open
     call setline(1,s:Lsr(in_cache ? s:cache_url[path] : path))
     exe 'au! dirvishRemote funcundefined dirvish#open if bufname("%") ==#' string(bufname('%'))
           \ '| redir => g:remote_out | call feedkeys(":\<C-U>echon ''''|redi END|cal g:Refunc()\<CR>","n") | endif'
